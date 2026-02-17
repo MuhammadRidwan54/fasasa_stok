@@ -7,11 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Laporan extends Model
 {
+    use HasFactory;
+
+    protected $table = 'laporans'; // Pastikan ini benar
+    
     protected $fillable = [
         'tas_id',
         'tanggal',
-        'jumlah_terjual',
         'platform', // Tambahkan ini
+        'warna',    // Tambahkan ini
+        'jumlah_terjual',
         'sisa_stok',
         'keterangan'
     ];
@@ -29,10 +34,10 @@ class Laporan extends Model
     public function getPlatformIconAttribute()
     {
         return match($this->platform) {
-            'shopee' => 'bi bi-shop',
-            'tiktok' => 'bi bi-tiktok',
-            // 'offline' => 'bi bi-shop',
-            default => 'bi bi-question-circle'
+            'shopee' => 'bi-shop',
+            'tiktok' => 'bi-tiktok',
+            'offline' => 'bi-shop-window',
+            default => 'bi-three-dots'
         };
     }
 
@@ -40,10 +45,10 @@ class Laporan extends Model
     public function getPlatformColorAttribute()
     {
         return match($this->platform) {
-            'shopee' => 'warning',
-            'tiktok' => 'dark',
-            // 'offline' => 'primary',
-            default => 'secondary'
+            'shopee' => '#ee4d2d', // Warna oranye Shopee
+            'tiktok' => '#000000', // Hitam
+            'offline' => '#3498db', // Biru
+            default => '#95a5a6'   // Abu-abu
         };
     }
 
@@ -53,8 +58,14 @@ class Laporan extends Model
         return match($this->platform) {
             'shopee' => 'Shopee',
             'tiktok' => 'TikTok Shop',
-            // 'offline' => 'Offline Store',
+            'offline' => 'Offline Store',
             default => 'Lainnya'
         };
+    }
+    
+    // Method untuk mendapatkan total harga
+    public function getTotalHargaAttribute()
+    {
+        return $this->jumlah_terjual * $this->tas->harga;
     }
 }

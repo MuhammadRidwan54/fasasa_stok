@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('laporans', function (Blueprint $table) {
             $table->string('platform')->default('shopee')->after('jumlah_terjual');
+            $table->string('warna')->nullable()->after('tas_id'); // Tambahkan ini
             // shopee, tiktok, offline, etc
         });
     }
@@ -23,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('laporans', function (Blueprint $table) {
-            $table->dropColumn('platform');
+            $table->dropColumn(['platform', 'warna']); // Update untuk drop kedua kolom
         });
     }
 };

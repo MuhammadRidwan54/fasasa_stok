@@ -11,14 +11,30 @@ class Tas extends Model
 
     protected $fillable = [
         'kode_tas',
-        'model_tas',
         'nama_tas',
+        'model_tas',
         'warna_tas',
+        'harga',
         'stok',
-        'harga'
     ];
-
-    public function laporans()
+    
+    protected $casts = [
+        'harga' => 'integer',
+        'stok' => 'integer',
+    ];
+    
+    /**
+     * Relasi ke stok masuk
+     */
+    public function stokMasuk()
+    {
+        return $this->hasMany(StokMasuk::class);
+    }
+    
+    /**
+     * Relasi ke laporan
+     */
+    public function laporan()
     {
         return $this->hasMany(Laporan::class);
     }

@@ -37,12 +37,29 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Master Tas
     Route::resource('tas', TasController::class);
     
-    // Laporan
-    Route::resource('laporan', LaporanController::class)->except(['edit', 'update']);
-    Route::get('/laporan/export/excel', [LaporanController::class, 'exportExcel'])
-        ->name('laporan.export.excel');
-    Route::get('/laporan/export/pdf', [LaporanController::class, 'exportPdf'])
-        ->name('laporan.export.pdf');
+    // Quick view untuk tas
+    Route::get('/tas/{id}/quickview', [TasController::class, 'quickView'])->name('tas.quickview');
+    
+    // Laporan Routes
+    Route::prefix('laporan')->group(function () {
+        Route::get('/', [LaporanController::class, 'index'])->name('laporan.index');
+        Route::get('/create', [LaporanController::class, 'create'])->name('laporan.create');
+        Route::post('/', [LaporanController::class, 'store'])->name('laporan.store');
+        Route::get('/{laporan}', [LaporanController::class, 'show'])->name('laporan.show');
+        Route::delete('/{laporan}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
+        
+        // Export routes
+        Route::post('/export/pdf', [LaporanController::class, 'exportPDF'])->name('laporan.export.pdf');
+        Route::post('/export/excel', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
+        Route::post('/export/excel-advanced', [LaporanController::class, 'exportExcelAdvanced'])->name('laporan.export.excel.advanced');
+        Route::post('/export/excel-multi', [LaporanController::class, 'exportExcelMultiSheet'])->name('laporan.export.excel.multi');
+        Route::get('/laporan/export-excel-multi-sheet', [LaporanController::class, 'exportExcelMultiSheet'])->name('laporan.export-excel-multi-sheet');
+        Route::post('/export/csv', [LaporanController::class, 'exportCSV'])->name('laporan.export.csv');
+        
+        // GET routes untuk compatibility
+        Route::get('/export/excel', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel.get');
+        Route::get('/export/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.export.pdf.get');
+    });
 });
 
 // Fallback route
