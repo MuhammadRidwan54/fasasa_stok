@@ -254,4 +254,19 @@ class TasController extends Controller
             ]
         ]);
     }
+
+    public function getStokPerWarna($id)
+    {
+        $tas = Tas::with('stokMasuk')->findOrFail($id);
+        
+        $stokPerWarna = [];
+        foreach ($tas->stokMasuk as $stok) {
+            if (!isset($stokPerWarna[$stok->warna])) {
+                $stokPerWarna[$stok->warna] = 0;
+            }
+            $stokPerWarna[$stok->warna] += $stok->jumlah;
+        }
+        
+        return response()->json($stokPerWarna);
+    }
 }

@@ -183,7 +183,7 @@
                                     background-color: {{ $item->warna_tas == 'Hitam' ? '#333' : 
                                                       ($item->warna_tas == 'Merah' ? '#e74c3c' : 
                                                       ($item->warna_tas == 'Biru' ? '#3498db' : 
-                                                      ($item->warna_tas == 'Hijau' ? '#27ae60' :
+                                                      ($item->warna_tas == 'Hijau' ? '#63fba2' :
                                                       ($item->warna_tas == 'Kuning' ? '#f39c12' :
                                                       ($item->warna_tas == 'Ungu' ? '#8e44ad' :
                                                       ($item->warna_tas == 'Pink' ? '#e91e63' :

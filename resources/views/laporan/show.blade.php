@@ -8,6 +8,14 @@
         <h1 class="page-title">Detail Laporan</h1>
         <p class="page-subtitle">Informasi lengkap transaksi penjualan</p>
     </div>
+    <div class="d-flex gap-2">
+        <a href="{{ route('laporan.edit', $laporan->id) }}" class="btn btn-warning">
+            <i class="bi bi-pencil-square me-1"></i> Edit
+        </a>
+        <a href="{{ route('laporan.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Kembali
+        </a>
+    </div>
 </div>
 
 <div class="row">
@@ -43,6 +51,10 @@
                                         <i class="bi bi-shop-window me-1"></i> Offline/Endorse
                                     </span>
                                     @break
+                                @case('affiliate')
+                                    <span class="badge bg-success" style="padding: 4px 8px;">
+                                        <i class="bi bi-link me-1"></i> Affiliate
+                                    </span>
                                 @default
                                     <span class="badge bg-secondary" style="padding: 4px 8px;">
                                         <i class="bi bi-three-dots me-1"></i> Lainnya
@@ -106,8 +118,7 @@
                                         ->sum('jumlah');
                                         
                                     // Stok setelah transaksi untuk warna ini
-                                    $stokSetelahTransaksi = $stokPerWarna - $laporan->jumlah_terjual;
-                                    $stokSetelahTransaksi = max(0, $stokSetelahTransaksi); // Tidak boleh negatif
+                                    $stokSetelahTransaksi = $stokPerWarna;
                                 }
                             @endphp
                             <span class="badge" style="
@@ -218,7 +229,7 @@
                 @endphp
                 <p><strong>Warna: {{ $warna }}</strong></p>
                 <ul style="padding-left: 16px; margin-bottom: 12px;">
-                    <li>Sisa stok awal: <strong>{{ $stokPerWarna }} pcs</strong></li>
+                    <li>Stok awal: <strong>{{ $stokPerWarna }} pcs</strong></li>
                     <li>Setelah transaksi: <strong>{{ $stokSetelahTransaksi }} pcs</strong></li>
                 </ul>
                 <p><strong>Pengurangan Stok:</strong> {{ $laporan->jumlah_terjual }} pcs</p>
@@ -244,9 +255,12 @@
                 <i class="bi bi-gear me-1"></i> Aksi
             </div>
             <div class="card-body" style="display: flex; flex-direction: column; gap: 8px;">
-                <a href="{{ route('laporan.index') }}" class="btn btn-secondary" style="width: 100%;">
-                    <i class="bi bi-arrow-left me-1"></i> Kembali
-                </a>
+                <!-- Return Stock Button -->
+                <button type="button" class="btn btn-info" style="width: 100%;" data-bs-toggle="modal" data-bs-target="#returnModal">
+                    <i class="bi bi-arrow-return-left me-1"></i> Return Stok
+                </button>
+                
+                <!-- Delete Form -->
                 <form action="{{ route('laporan.destroy', $laporan->id) }}" method="POST">
                     @csrf
                     @method('DELETE')
@@ -259,4 +273,65 @@
         </div>
     </div>
 </div>
+
+<!-- Return Stock Modal -->
+<div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('laporan.return-stok', $laporan->id) }}" method="POST">
+                @csrf
+                @method('PATCH')
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnModalLabel">
+                        <i class="bi bi-arrow-return-left me-2"></i>Return Stok
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Informasi Transaksi</label>
+                        <div class="p-3 bg-light rounded">
+                            <p class="mb-1"><strong>Nama Tas:</strong> {{ $laporan->tas->nama_tas }}</p>
+                            <p class="mb-1"><strong>Warna:</strong> {{ $laporan->warna }}</p>
+                            <p class="mb-0"><strong>Jumlah Return:</strong> {{ $laporan->jumlah_terjual }} pcs</p>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <small>Stok akan dikembalikan ke gudang untuk warna <strong>{{ $laporan->warna }}</strong>. 
+                        Stok total tas akan bertambah {{ $laporan->jumlah_terjual }} pcs.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="bi bi-check-circle me-1"></i> Konfirmasi Return
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-success {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    .badge-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    .badge-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+</style>
 @endsection

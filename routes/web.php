@@ -39,6 +39,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     
     // Quick view untuk tas
     Route::get('/tas/{id}/quickview', [TasController::class, 'quickView'])->name('tas.quickview');
+
+    Route::get('/tas/{id}/stok-warna', [TasController::class, 'getStokPerWarna'])->name('tas.stok-warna');
     
     // Laporan Routes
     Route::prefix('laporan')->group(function () {
@@ -46,7 +48,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/create', [LaporanController::class, 'create'])->name('laporan.create');
         Route::post('/', [LaporanController::class, 'store'])->name('laporan.store');
         Route::get('/{laporan}', [LaporanController::class, 'show'])->name('laporan.show');
+        Route::get('/{laporan}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
+        Route::put('/{laporan}', [LaporanController::class, 'update'])->name('laporan.update');
         Route::delete('/{laporan}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
+        Route::patch('/laporan/{laporan}/return-stok', [LaporanController::class, 'returnStok'])->name('laporan.return-stok');
+        
         
         // Export routes
         Route::post('/export/pdf', [LaporanController::class, 'exportPDF'])->name('laporan.export.pdf');

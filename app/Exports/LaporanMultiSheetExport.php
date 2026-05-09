@@ -16,7 +16,6 @@ class LaporanMultiSheetExport implements WithMultipleSheets
     {
         $sheets = [];
         
-        // ✅ DIPERBAIKI: Menggunakan kelas yang benar
         $sheets[] = new LaporanDetailSheet('Ringkasan');
         $sheets[] = new LaporanPerPlatformSheet('Per Platform');
         $sheets[] = new LaporanPerProductSheet('Per Produk');
@@ -25,7 +24,6 @@ class LaporanMultiSheetExport implements WithMultipleSheets
     }
 }
 
-// ✅ DIPERBAIKI: Kelas Sheet yang benar
 class LaporanDetailSheet implements FromCollection, WithTitle, WithHeadings, WithStyles
 {
     private $sheetTitle;
@@ -42,7 +40,7 @@ class LaporanDetailSheet implements FromCollection, WithTitle, WithHeadings, Wit
     
     public function collection()
     {
-        // Ambil data ringkasan
+        // Ambil data ringkasan dengan filter
         $query = Laporan::with('tas');
         
         // Filter dari session
@@ -54,8 +52,51 @@ class LaporanDetailSheet implements FromCollection, WithTitle, WithHeadings, Wit
             $query->whereDate('tanggal', '<=', session('export_ke_tanggal'));
         }
         
+        // Filter platform - MULTIPLE SELECT
         if (session('export_platform')) {
-            $query->where('platform', session('export_platform'));
+            $platforms = session('export_platform');
+            
+            if (is_array($platforms)) {
+                $platforms = array_filter($platforms);
+                if (!empty($platforms)) {
+                    $query->whereIn('platform', $platforms);
+                }
+            } else {
+                $query->where('platform', $platforms);
+            }
+        }
+        
+        // Filter periode
+        if (session('export_periode')) {
+            $periode = session('export_periode');
+            $now = now();
+            
+            switch ($periode) {
+                case 'hari_ini':
+                    $query->whereDate('tanggal', $now->toDateString());
+                    break;
+                case 'kemarin':
+                    $query->whereDate('tanggal', $now->subDay()->toDateString());
+                    break;
+                case 'minggu_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfWeek()->toDateString(),
+                        $now->endOfWeek()->toDateString()
+                    ]);
+                    break;
+                case 'bulan_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfMonth()->toDateString(),
+                        $now->endOfMonth()->toDateString()
+                    ]);
+                    break;
+                case 'tahun_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfYear()->toDateString(),
+                        $now->endOfYear()->toDateString()
+                    ]);
+                    break;
+            }
         }
         
         $laporans = $query->orderBy('tanggal', 'desc')->get();
@@ -67,18 +108,44 @@ class LaporanDetailSheet implements FromCollection, WithTitle, WithHeadings, Wit
         });
         $totalTransaksi = $laporans->count();
         
+        // Info filter untuk ditampilkan
+        $platformText = '';
+        if (session('export_platform')) {
+            $platforms = session('export_platform');
+            $platformNames = [
+                'shopee' => 'Shopee',
+                'tiktok' => 'TikTok',
+                'offline' => 'Offline',
+                'affiliate' => 'Affiliate',
+                'lainnya' => 'Lainnya'
+            ];
+            
+            if (is_array($platforms)) {
+                $selectedPlatforms = array_map(function($p) use ($platformNames) {
+                    return $platformNames[$p] ?? $p;
+                }, array_filter($platforms));
+                if (!empty($selectedPlatforms)) {
+                    $platformText = 'Platform: ' . implode(', ', $selectedPlatforms);
+                }
+            } else if (!empty($platforms)) {
+                $platformText = 'Platform: ' . ($platformNames[$platforms] ?? $platforms);
+            }
+        }
+        
+        $periodeText = session('export_periode') ? ucfirst(str_replace('_', ' ', session('export_periode'))).' | ' : '';
+        
         return collect([
-            ['Ringkasan Penjualan', ''],
+            ['RINGKASAN PENJUALAN TAS FASASA', ''],
+            ['Periode', $periodeText . $platformText],
+            ['Tanggal Cetak', now()->format('d/m/Y H:i:s')],
+            ['', ''],
+            ['INFORMASI RINGKASAN', ''],
             ['Total Transaksi', $totalTransaksi],
             ['Total Terjual (pcs)', $totalTerjual],
             ['Total Pendapatan', 'Rp ' . number_format($totalPendapatan, 0, ',', '.')],
             ['Rata-rata per Transaksi', $totalTransaksi > 0 ? 'Rp ' . number_format($totalPendapatan / $totalTransaksi, 0, ',', '.') : '0'],
             ['', ''],
-            ['Detail per Platform', ''],
-            ['Shopee', $laporans->where('platform', 'shopee')->count()],
-            ['TikTok', $laporans->where('platform', 'tiktok')->count()],
-            ['Offline', $laporans->where('platform', 'offline')->count()],
-            ['Lainnya', $laporans->where('platform', 'lainnya')->count()],
+            ['DETAIL PER PLATFORM', ''],
         ]);
     }
     
@@ -90,8 +157,9 @@ class LaporanDetailSheet implements FromCollection, WithTitle, WithHeadings, Wit
     public function styles(Worksheet $sheet)
     {
         return [
-            1 => ['font' => ['bold' => true]],
-            7 => ['font' => ['bold' => true]],
+            1 => ['font' => ['bold' => true, 'size' => 14]],
+            5 => ['font' => ['bold' => true]],
+            11 => ['font' => ['bold' => true]],
         ];
     }
 }
@@ -121,19 +189,81 @@ class LaporanPerPlatformSheet implements FromCollection, WithTitle, WithHeadings
             $query->whereDate('tanggal', '<=', session('export_ke_tanggal'));
         }
         
+        // Filter platform - MULTIPLE SELECT
+        if (session('export_platform')) {
+            $platforms = session('export_platform');
+            
+            if (is_array($platforms)) {
+                $platforms = array_filter($platforms);
+                if (!empty($platforms)) {
+                    $query->whereIn('platform', $platforms);
+                }
+            } else {
+                $query->where('platform', $platforms);
+            }
+        }
+        
+        // Filter periode
+        if (session('export_periode')) {
+            $periode = session('export_periode');
+            $now = now();
+            
+            switch ($periode) {
+                case 'hari_ini':
+                    $query->whereDate('tanggal', $now->toDateString());
+                    break;
+                case 'kemarin':
+                    $query->whereDate('tanggal', $now->subDay()->toDateString());
+                    break;
+                case 'minggu_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfWeek()->toDateString(),
+                        $now->endOfWeek()->toDateString()
+                    ]);
+                    break;
+                case 'bulan_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfMonth()->toDateString(),
+                        $now->endOfMonth()->toDateString()
+                    ]);
+                    break;
+                case 'tahun_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfYear()->toDateString(),
+                        $now->endOfYear()->toDateString()
+                    ]);
+                    break;
+            }
+        }
+        
         $laporans = $query->get();
         
-        $platforms = ['shopee', 'tiktok', 'offline', 'lainnya'];
+        // Tentukan platform yang akan ditampilkan (filter atau semua)
+        $platformsToShow = ['shopee', 'tiktok', 'offline', 'affiliate', 'lainnya'];
+        
+        // Jika ada filter platform, hanya tampilkan platform yang dipilih
+        if (session('export_platform')) {
+            $selectedPlatforms = session('export_platform');
+            if (is_array($selectedPlatforms)) {
+                $platformsToShow = array_filter($selectedPlatforms);
+            } else {
+                $platformsToShow = [$selectedPlatforms];
+            }
+        }
+        
         $platformNames = [
             'shopee' => 'Shopee',
             'tiktok' => 'TikTok',
             'offline' => 'Offline',
+            'affiliate' => 'Affiliate',
             'lainnya' => 'Lainnya'
         ];
         
         $result = collect();
         
-        foreach ($platforms as $platform) {
+        foreach ($platformsToShow as $platform) {
+            if (empty($platform)) continue;
+            
             $data = $laporans->where('platform', $platform);
             $totalTerjual = $data->sum('jumlah_terjual');
             $totalPendapatan = $data->sum(function($item) {
@@ -190,8 +320,51 @@ class LaporanPerProductSheet implements FromCollection, WithTitle, WithHeadings
             $query->whereDate('tanggal', '<=', session('export_ke_tanggal'));
         }
         
+        // Filter platform - MULTIPLE SELECT
         if (session('export_platform')) {
-            $query->where('platform', session('export_platform'));
+            $platforms = session('export_platform');
+            
+            if (is_array($platforms)) {
+                $platforms = array_filter($platforms);
+                if (!empty($platforms)) {
+                    $query->whereIn('platform', $platforms);
+                }
+            } else {
+                $query->where('platform', $platforms);
+            }
+        }
+        
+        // Filter periode
+        if (session('export_periode')) {
+            $periode = session('export_periode');
+            $now = now();
+            
+            switch ($periode) {
+                case 'hari_ini':
+                    $query->whereDate('tanggal', $now->toDateString());
+                    break;
+                case 'kemarin':
+                    $query->whereDate('tanggal', $now->subDay()->toDateString());
+                    break;
+                case 'minggu_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfWeek()->toDateString(),
+                        $now->endOfWeek()->toDateString()
+                    ]);
+                    break;
+                case 'bulan_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfMonth()->toDateString(),
+                        $now->endOfMonth()->toDateString()
+                    ]);
+                    break;
+                case 'tahun_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfYear()->toDateString(),
+                        $now->endOfYear()->toDateString()
+                    ]);
+                    break;
+            }
         }
         
         $laporans = $query->get();
@@ -211,7 +384,7 @@ class LaporanPerProductSheet implements FromCollection, WithTitle, WithHeadings
             $result->push([
                 'Kode Tas' => $tas->kode_tas,
                 'Nama Tas' => $tas->nama_tas,
-                'Warna' => $tas->warna_tas,
+                'Warna' => $items->first()->warna ?? $tas->warna_tas,
                 'Jumlah Terjual' => $totalTerjual,
                 'Total Pendapatan' => 'Rp ' . number_format($totalPendapatan, 0, ',', '.')
             ]);

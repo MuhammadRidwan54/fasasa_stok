@@ -3,9 +3,9 @@
 namespace App\Exports;
 
 use App\Models\Laporan;
-use Illuminate\Http\Request;  // ✅ DITAMBAHKAN
-use Maatwebsite\Excel\Facades\Excel;  // ✅ DITAMBAHKAN
-use Barryvdh\DomPDF\Facade\Pdf;  // ✅ DITAMBAHKAN
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -33,8 +33,21 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithCol
             $query->whereDate('tanggal', '<=', session('export_ke_tanggal'));
         }
         
+        // Filter platform - MULTIPLE SELECT
         if (session('export_platform')) {
-            $query->where('platform', session('export_platform'));
+            $platforms = session('export_platform');
+            
+            // Jika platform adalah array (multiple selection)
+            if (is_array($platforms)) {
+                // Hapus nilai kosong dari array
+                $platforms = array_filter($platforms);
+                if (!empty($platforms)) {
+                    $query->whereIn('platform', $platforms);
+                }
+            } else {
+                // Untuk backward compatibility (single selection)
+                $query->where('platform', $platforms);
+            }
         }
         
         // Tambahkan periode filter jika ada
@@ -78,6 +91,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithCol
                 'shopee' => 'Shopee',
                 'tiktok' => 'TikTok',
                 'offline' => 'Offline',
+                'affiliate' => 'Affiliate',
                 'lainnya' => 'Lainnya'
             ];
             
@@ -86,7 +100,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithCol
                 'Tanggal' => $item->tanggal->format('d/m/Y'),
                 'Kode Tas' => $item->tas->kode_tas,
                 'Nama Tas' => $item->tas->nama_tas,
-                'Warna' => $item->tas->warna_tas,
+                'Warna' => $item->warna ?? $item->tas->warna_tas, // Perbaiki: ambil dari laporan dulu
                 'Terjual (pcs)' => $item->jumlah_terjual,
                 'Platform' => $platformNames[$item->platform] ?? $item->platform,
                 'Harga Satuan' => $item->tas->harga,
@@ -191,8 +205,37 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithCol
         
         // Periode
         $periode = session('export_periode') ? ucfirst(str_replace('_', ' ', session('export_periode'))) : 'Semua Periode';
+        
+        // Tampilkan platform yang dipilih
+        $platformText = '';
+        if (session('export_platform')) {
+            $platforms = session('export_platform');
+            if (is_array($platforms)) {
+                $platformNames = [
+                    'shopee' => 'Shopee',
+                    'tiktok' => 'TikTok',
+                    'offline' => 'Offline',
+                    'affiliate' => 'Affiliate',
+                    'lainnya' => 'Lainnya'
+                ];
+                $selectedPlatforms = array_map(function($p) use ($platformNames) {
+                    return $platformNames[$p] ?? $p;
+                }, array_filter($platforms));
+                $platformText = ' | Platform: ' . implode(', ', $selectedPlatforms);
+            } else {
+                $platformNames = [
+                    'shopee' => 'Shopee',
+                    'tiktok' => 'TikTok',
+                    'offline' => 'Offline',
+                    'affiliate' => 'Affiliate',
+                    'lainnya' => 'Lainnya'
+                ];
+                $platformText = ' | Platform: ' . ($platformNames[$platforms] ?? $platforms);
+            }
+        }
+        
         $sheet->mergeCells('A2:L2');
-        $sheet->setCellValue('A2', 'Periode: ' . $periode);
+        $sheet->setCellValue('A2', 'Periode: ' . $periode . $platformText);
         $sheet->getStyle('A2')->getAlignment()->setHorizontal('center');
         
         // Tanggal cetak
@@ -348,6 +391,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithCol
                     'shopee' => 'Shopee',
                     'tiktok' => 'TikTok',
                     'offline' => 'Offline',
+                    'affiliate' => 'Affiliate',
                     'lainnya' => 'Lainnya'
                 ];
                 
@@ -359,7 +403,7 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithCol
                     $laporan->tanggal->format('d/m/Y'),
                     $laporan->tas->kode_tas,
                     $laporan->tas->nama_tas,
-                    $laporan->tas->warna_tas,
+                    $laporan->warna ?? $laporan->tas->warna_tas,
                     $laporan->jumlah_terjual,
                     $platformNames[$laporan->platform] ?? $laporan->platform,
                     $laporan->tas->harga,
@@ -391,8 +435,18 @@ class LaporanExport implements FromCollection, WithHeadings, WithStyles, WithCol
             $query->whereDate('tanggal', '<=', $request->ke_tanggal);
         }
         
-        if ($request->filled('platform')) {
-            $query->where('platform', $request->platform);
+        // Filter platform - MULTIPLE SELECT
+        if ($request->has('platform') && !empty($request->platform)) {
+            $platforms = $request->platform;
+            
+            if (is_array($platforms)) {
+                $platforms = array_filter($platforms);
+                if (!empty($platforms)) {
+                    $query->whereIn('platform', $platforms);
+                }
+            } else {
+                $query->where('platform', $platforms);
+            }
         }
         
         if ($request->filled('periode')) {

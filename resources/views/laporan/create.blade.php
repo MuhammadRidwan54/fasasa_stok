@@ -37,6 +37,7 @@
                                 <option value="shopee" {{ old('platform') == 'shopee' ? 'selected' : '' }}>Shopee</option>
                                 <option value="tiktok" {{ old('platform') == 'tiktok' ? 'selected' : '' }}>TikTok Shop</option>
                                 <option value="offline" {{ old('platform') == 'offline' ? 'selected' : '' }}>Offline/Endorse</option>
+                                <option value="affiliate" {{ old('platform') == 'affiliate' ? 'selected' : '' }}>Affiliate</option>
                                 <option value="lainnya" {{ old('platform') == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
                             </select>
                             @error('platform')
@@ -167,6 +168,12 @@
                         <i class="bi bi-shop-window me-1"></i> Offline
                     </span>
                     <br/><small>Toko atau Endorse</small>
+                </p>
+                <p>
+                    <span class="badge bg-success" style="padding: 2px 6px;">
+                        <i class="bi bi-link me-1"></i> Affiliate
+                    </span>
+                    <br/><small>Program Affiliate</small>
                 </p>
                 <p>
                     <span class="badge bg-secondary" style="padding: 2px 6px;">

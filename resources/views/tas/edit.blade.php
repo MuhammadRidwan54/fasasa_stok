@@ -40,6 +40,9 @@
                                 <option value="HANDBAGS" {{ old('model_tas', $tas->model_tas) == 'HANDBAGS' ? 'selected' : '' }}>HANDBAGS</option>
                                 <option value="TOTE BAGS" {{ old('model_tas', $tas->model_tas) == 'TOTE BAGS' ? 'selected' : '' }}>TOTE BAGS</option>
                                 <option value="SHOULDER BAGS" {{ old('model_tas', $tas->model_tas) == 'SHOULDER BAGS' ? 'selected' : '' }}>SHOULDER BAGS</option>
+                                <option value="BOSTON BAGS" {{ old('model_tas', $tas->model_tas) == 'BOSTON BAGS' ? 'selected' : '' }}>BOSTON BAGS</option>
+                                <option value="BUCKET BAGS" {{ old('model_tas', $tas->model_tas) == 'BUCKET BAGS' ? 'selected' : '' }}>BUCKET BAGS</option>
+                                <option value="SLOUCHE BAGS" {{ old('model_tas', $tas->model_tas) == 'SLOUCHE BAGS' ? 'selected' : '' }}>SLOUCHE BAGS</option>
                             </select>
                             @error('model_tas')
                                 <small class="text-danger">{{ $message }}</small>
@@ -98,11 +101,15 @@
                                             <option value="Maroon" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Maroon' ? 'selected' : '' }}>Maroon</option>
                                             <option value="Khaki" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Khaki' ? 'selected' : '' }}>Khaki</option>
                                             <option value="Caramel" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Caramel' ? 'selected' : '' }}>Caramel</option>
-                                            <option value="Green" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Green' ? 'selected' : '' }}>Green</option>
+                                            <option value="Matcha" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Matcha' ? 'selected' : '' }}>Matcha</option>
                                             <option value="Blue" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Blue' ? 'selected' : '' }}>Blue</option>
                                             <option value="Yellow" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Yellow' ? 'selected' : '' }}>Yellow</option>
                                             <option value="Grey" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Grey' ? 'selected' : '' }}>Grey</option>
-                                            <option value="Cherry red" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Cherry red' ? 'selected' : '' }}>Cherry red</option>
+                                            <option value="Red cherry" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Red cherry' ? 'selected' : '' }}>Red cherry</option>
+                                            <option value="Sunflower" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Sunflower' ? 'selected' : '' }}>Sunflower</option>
+                                            <option value="Denim" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Denim' ? 'selected' : '' }}>Denim</option>
+                                            <option value="Terracota" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Terracota' ? 'selected' : '' }}>Terracota</option>
+                                            <option value="Mocca" {{ old('warna_tas.' . $index, $stokMasuk->warna) == 'Mocca' ? 'selected' : '' }}>Mocca</option>
                                         </select>
                                         @error('warna_tas.' . $index)
                                             <small class="text-danger">{{ $message }}</small>
@@ -149,11 +156,15 @@
                                             <option value="Maroon" {{ old('warna_tas.0') == 'Maroon' ? 'selected' : '' }}>Maroon</option>
                                             <option value="Khaki" {{ old('warna_tas.0') == 'Khaki' ? 'selected' : '' }}>Khaki</option>
                                             <option value="Caramel" {{ old('warna_tas.0') == 'Caramel' ? 'selected' : '' }}>Caramel</option>
-                                            <option value="Green" {{ old('warna_tas.0') == 'Green' ? 'selected' : '' }}>Green</option>
+                                            <option value="Matcha" {{ old('warna_tas.0') == 'Matcha' ? 'selected' : '' }}>Matcha</option>
                                             <option value="Blue" {{ old('warna_tas.0') == 'Blue' ? 'selected' : '' }}>Blue</option>
                                             <option value="Yellow" {{ old('warna_tas.0') == 'Yellow' ? 'selected' : '' }}>Yellow</option>
                                             <option value="Grey" {{ old('warna_tas.0') == 'Grey' ? 'selected' : '' }}>Grey</option>
-                                            <option value="Cherry red" {{ old('warna_tas.0') == 'Cherry red' ? 'selected' : '' }}>Cherry red</option>
+                                            <option value="Red cherry" {{ old('warna_tas.0') == 'Red cherry' ? 'selected' : '' }}>Red cherry</option>
+                                            <option value="Sunflower" {{ old('warna_tas.0') == 'Sunflower' ? 'selected' : '' }}>Sunflower</option>
+                                            <option value="Denim" {{ old('warna_tas.0') == 'Denim' ? 'selected' : '' }}>Denim</option>
+                                            <option value="Terracota" {{ old('warna_tas.0') == 'Terracota' ? 'selected' : '' }}>Terracota</option>
+                                            <option value="Mocca" {{ old('warna_tas.0') == 'Mocca' ? 'selected' : '' }}>Mocca</option>
                                         </select>
                                         @error('warna_tas.0')
                                             <small class="text-danger">{{ $message }}</small>
@@ -252,11 +263,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         <option value="Maroon">Maroon</option>
                         <option value="Khaki">Khaki</option>
                         <option value="Caramel">Caramel</option>
-                        <option value="Green">Green</option>
+                        <option value="Matcha">Matcha</option>
                         <option value="Blue">Blue</option>
                         <option value="Yellow">Yellow</option>
                         <option value="Grey">Grey</option>
-                        <option value="Cherry red">Cherry red</option>
+                        <option value="Red cherry">Red cherry</option>
+                        <option value="Sunflower">Sunflower</option>
+                        <option value="Denim">Denim</option>
+                        <option value="Terracota">Terracota</option>
+                        <option value="Mocca">Mocca</option>
                     </select>
                 </div>
                 <div class="col-md-3">

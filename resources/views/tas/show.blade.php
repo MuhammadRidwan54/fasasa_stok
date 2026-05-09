@@ -143,6 +143,8 @@
                                             'Pink' => ['bg' => '#e91e63', 'text' => '#ffffff'],
                                             'Navy' => ['bg' => '#1a3a52', 'text' => '#ffffff'],
                                             'Abu-abu' => ['bg' => '#95a5a6', 'text' => '#000000'],
+                                            'Terracota' => ['bg' => '#ff6600', 'text' => '#000000'],
+                                            'Mocca' => ['bg' => '#6d5849', 'text' => '#ffffff'],
                                             'Coklat' => ['bg' => '#A0522D', 'text' => '#ffffff']
                                         ];
                                         

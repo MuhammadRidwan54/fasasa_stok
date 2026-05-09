@@ -41,8 +41,51 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
             $query->whereDate('tanggal', '<=', session('export_ke_tanggal'));
         }
         
+        // Filter platform - MULTIPLE SELECT
         if (session('export_platform')) {
-            $query->where('platform', session('export_platform'));
+            $platforms = session('export_platform');
+            
+            if (is_array($platforms)) {
+                $platforms = array_filter($platforms);
+                if (!empty($platforms)) {
+                    $query->whereIn('platform', $platforms);
+                }
+            } else {
+                $query->where('platform', $platforms);
+            }
+        }
+        
+        // Filter periode
+        if (session('export_periode')) {
+            $periode = session('export_periode');
+            $now = now();
+            
+            switch ($periode) {
+                case 'hari_ini':
+                    $query->whereDate('tanggal', $now->toDateString());
+                    break;
+                case 'kemarin':
+                    $query->whereDate('tanggal', $now->subDay()->toDateString());
+                    break;
+                case 'minggu_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfWeek()->toDateString(),
+                        $now->endOfWeek()->toDateString()
+                    ]);
+                    break;
+                case 'bulan_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfMonth()->toDateString(),
+                        $now->endOfMonth()->toDateString()
+                    ]);
+                    break;
+                case 'tahun_ini':
+                    $query->whereBetween('tanggal', [
+                        $now->startOfYear()->toDateString(),
+                        $now->endOfYear()->toDateString()
+                    ]);
+                    break;
+            }
         }
         
         $this->data = $query->orderBy('tanggal', 'desc')->get();
@@ -60,7 +103,7 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
             return;
         }
         
-        $platforms = ['shopee', 'tiktok', 'offline', 'lainnya'];
+        $platforms = ['shopee', 'tiktok', 'offline', 'affiliate', 'lainnya'];
         foreach ($platforms as $platform) {
             $platformData = $this->data->where('platform', $platform);
             $this->summaryData['platform'][$platform] = [
@@ -114,6 +157,7 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
                 'shopee' => 'Shopee',
                 'tiktok' => 'TikTok',
                 'offline' => 'Offline',
+                'affiliate' => 'Affiliate',
                 'lainnya' => 'Lainnya'
             ];
             
@@ -122,7 +166,7 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
                 'Tanggal' => $item->tanggal->format('d/m/Y'),
                 'Kode Tas' => $item->tas->kode_tas,
                 'Nama Tas' => $item->tas->nama_tas,
-                'Warna' => $item->tas->warna_tas,
+                'Warna' => $item->warna ?? $item->tas->warna_tas,
                 'Terjual (pcs)' => $item->jumlah_terjual,
                 'Platform' => $platformNames[$item->platform] ?? $item->platform,
                 'Harga Satuan' => $item->tas->harga,
@@ -186,8 +230,34 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
         
+        // Tampilkan informasi filter
+        $periode = session('export_periode') ? ucfirst(str_replace('_', ' ', session('export_periode'))) : 'Semua Periode';
+        
+        $platformText = '';
+        if (session('export_platform')) {
+            $platforms = session('export_platform');
+            $platformNames = [
+                'shopee' => 'Shopee',
+                'tiktok' => 'TikTok',
+                'offline' => 'Offline',
+                'affiliate' => 'Affiliate',
+                'lainnya' => 'Lainnya'
+            ];
+            
+            if (is_array($platforms)) {
+                $selectedPlatforms = array_map(function($p) use ($platformNames) {
+                    return $platformNames[$p] ?? $p;
+                }, array_filter($platforms));
+                if (!empty($selectedPlatforms)) {
+                    $platformText = ' | Platform: ' . implode(', ', $selectedPlatforms);
+                }
+            } else if (!empty($platforms)) {
+                $platformText = ' | Platform: ' . ($platformNames[$platforms] ?? $platforms);
+            }
+        }
+        
         $sheet->mergeCells('A2:L2');
-        $sheet->setCellValue('A2', 'Tanggal Cetak: ' . date('d/m/Y H:i:s'));
+        $sheet->setCellValue('A2', 'Periode: ' . $periode . $platformText . ' | Tanggal Cetak: ' . date('d/m/Y H:i:s'));
         $sheet->getStyle('A2')->getAlignment()->setHorizontal('center');
         
         $sheet->setTitle('Data Transaksi');
@@ -231,8 +301,32 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
         
         $periode = session('export_periode') ? ucfirst(str_replace('_', ' ', session('export_periode'))) : 'Semua Periode';
+        
+        $platformText = '';
+        if (session('export_platform')) {
+            $platforms = session('export_platform');
+            $platformNames = [
+                'shopee' => 'Shopee',
+                'tiktok' => 'TikTok',
+                'offline' => 'Offline',
+                'affiliate' => 'Affiliate',
+                'lainnya' => 'Lainnya'
+            ];
+            
+            if (is_array($platforms)) {
+                $selectedPlatforms = array_map(function($p) use ($platformNames) {
+                    return $platformNames[$p] ?? $p;
+                }, array_filter($platforms));
+                if (!empty($selectedPlatforms)) {
+                    $platformText = ' | Platform: ' . implode(', ', $selectedPlatforms);
+                }
+            } else if (!empty($platforms)) {
+                $platformText = ' | Platform: ' . ($platformNames[$platforms] ?? $platforms);
+            }
+        }
+        
         $sheet->mergeCells('A2:H2');
-        $sheet->setCellValue('A2', 'Periode: ' . $periode);
+        $sheet->setCellValue('A2', 'Periode: ' . $periode . $platformText);
         $sheet->getStyle('A2')->getAlignment()->setHorizontal('center');
         
         // Cards
@@ -321,6 +415,7 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
                 'shopee' => 'Shopee',
                 'tiktok' => 'TikTok',
                 'offline' => 'Offline',
+                'affiliate' => 'Affiliate',
                 'lainnya' => 'Lainnya'
             ];
             
@@ -371,19 +466,24 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
         if (!empty($this->summaryData['platform'])) {
             $platformLabels = [];
             $platformValues = [];
+            $platformCells = [];
             
             $platformNames = [
                 'shopee' => 'Shopee',
                 'tiktok' => 'TikTok',
                 'offline' => 'Offline',
+                'affiliate' => 'Affiliate',
                 'lainnya' => 'Lainnya'
             ];
             
+            $row = 11;
             foreach ($this->summaryData['platform'] as $key => $data) {
                 if ($data['count'] > 0) {
                     $platformLabels[] = $platformNames[$key] ?? $key;
                     $platformValues[] = $data['count'];
+                    $platformCells[] = 'B' . $row;
                 }
+                $row++;
             }
             
             if (count($platformValues) > 0) {
@@ -391,6 +491,7 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
                     'Distribusi Penjualan per Platform',
                     $platformLabels,
                     $platformValues,
+                    $platformCells,
                     'A20'
                 );
             }
@@ -400,10 +501,14 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
         if (!empty($this->summaryData['monthly'])) {
             $monthLabels = [];
             $monthValues = [];
+            $monthCells = [];
             
+            $row = 11;
             foreach ($this->summaryData['monthly'] as $data) {
                 $monthLabels[] = $data['month'];
                 $monthValues[] = $data['total_sold'];
+                $monthCells[] = 'G' . $row;
+                $row++;
             }
             
             if (count($monthValues) > 0) {
@@ -411,6 +516,7 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
                     'Trend Penjualan per Bulan',
                     $monthLabels,
                     $monthValues,
+                    $monthCells,
                     'F20'
                 );
             }
@@ -420,10 +526,14 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
         if (!empty($this->summaryData['products'])) {
             $productLabels = [];
             $productValues = [];
+            $productCells = [];
             
+            $row = 32;
             foreach ($this->summaryData['products'] as $product) {
                 $productLabels[] = substr($product['name'], 0, 15) . '...';
                 $productValues[] = $product['total_sold'];
+                $productCells[] = 'C' . $row;
+                $row++;
             }
             
             if (count($productValues) > 0) {
@@ -431,6 +541,7 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
                     '10 Produk Terlaris',
                     $productLabels,
                     $productValues,
+                    $productCells,
                     'A50'
                 );
             }
@@ -439,7 +550,7 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
         return $charts;
     }
     
-    private function createPieChart($title, $labels, $values, $position)
+    private function createPieChart($title, $labels, $values, $valueCells, $position)
     {
         $dataSeriesLabels = [
             new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_STRING, 'Dashboard Analitik!$A$11:$A$' . (10 + count($labels)), null, count($labels)),
@@ -466,7 +577,6 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
         $legend = new Legend();
         $legend->setPosition(Legend::POSITION_RIGHT);
         
-        // PERBAIKAN: Hilangkan parameter colors yang menyebabkan error
         $chart = new Chart(
             'chart1',
             new Title($title),
@@ -480,7 +590,7 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
         return $chart;
     }
     
-    private function createLineChart($title, $labels, $values, $position)
+    private function createLineChart($title, $labels, $values, $valueCells, $position)
     {
         $dataSeriesLabels = [
             new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_STRING, 'Dashboard Analitik!$F$11:$F$' . (10 + count($labels)), null, count($labels)),
@@ -514,7 +624,7 @@ class LaporanAdvancedExport implements FromCollection, WithHeadings, WithStyles,
         return $chart;
     }
     
-    private function createBarChart($title, $labels, $values, $position)
+    private function createBarChart($title, $labels, $values, $valueCells, $position)
     {
         $dataSeriesLabels = [
             new DataSeriesValues(DataSeriesValues::DATASERIES_TYPE_STRING, 'Dashboard Analitik!$A$32:$A$' . (31 + count($labels)), null, count($labels)),
